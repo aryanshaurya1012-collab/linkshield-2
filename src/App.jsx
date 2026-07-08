@@ -95,7 +95,7 @@ const MainLayout = ({ user, setUser, uptime, totalScans, setTotalScans }) => {
       <footer className="mt-auto pt-16 pb-6 w-full text-center text-sm relative z-20">
         <div className="inline-block border border-[#00FFFF]/30 bg-[#00FFFF]/5 px-6 py-3 rounded-full backdrop-blur-md shadow-[0_0_15px_rgba(0,255,255,0.1)]">
           <p className="text-[#00FFFF] font-mono tracking-widest uppercase text-xs drop-shadow-[0_0_5px_rgba(0,255,255,0.5)] font-bold">
-            LinkShield v2.0 <span className="text-[#FF00FF] mx-2">|</span> Team SkillX <span className="text-[#FF00FF] mx-2">|</span> JIS University
+            LinkShield v2.0 <span className="text-[#FF00FF] mx-2">|</span> All rights reserved <span className="text-[#FF00FF] mx-2">|</span> JIS UNIVERSITY
           </p>
         </div>
       </footer>
