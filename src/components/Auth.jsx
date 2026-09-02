@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, AlertTriangle, User, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Shield, User, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
 import { loginUser, registerUser } from '../utils/db';
-import { motion } from 'framer-motion';
 
 const BANNED_DOMAINS = [
   '10minutemail', 'tempmail', 'guerrillamail', 'yopmail', 
@@ -70,12 +69,7 @@ export default function Auth({ onLogin }) {
   };
 
   return (
-    <motion.div 
-      className="w-full flex items-center justify-center py-12 px-4 relative z-10"
-      initial={{ opacity: 0, y: 15 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
+    <div className="w-full flex items-center justify-center py-12 px-4 relative z-10">
       <div className="w-full max-w-md glass-panel p-8 rounded-3xl border border-[#00FFFF]/40 shadow-[0_0_30px_rgba(0,255,255,0.15)] relative overflow-hidden">
         {/* Glow effect */}
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00FFFF] to-transparent"></div>
@@ -166,6 +160,6 @@ export default function Auth({ onLogin }) {
           </p>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }

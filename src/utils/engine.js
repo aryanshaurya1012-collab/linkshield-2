@@ -22,6 +22,39 @@ export const calculateEntropy = (str) => {
   return entropy;
 };
 
+const MULTIPART_PUBLIC_SUFFIXES = new Set([
+  'ac.in', 'co.in', 'gov.in', 'net.in', 'org.in',
+  'co.uk', 'org.uk', 'gov.uk', 'ac.uk',
+  'com.au', 'net.au', 'org.au',
+  'co.jp', 'ne.jp', 'or.jp',
+  'co.nz', 'org.nz'
+]);
+
+export const extractHostname = (url) => {
+  if (!url) return null;
+
+  try {
+    const parsedUrl = new URL(url.includes('://') ? url : `http://${url}`);
+    return parsedUrl.hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+};
+
+export const getRootDomain = (hostname) => {
+  if (!hostname) return '';
+
+  const parts = hostname.toLowerCase().split('.');
+  if (parts.length <= 2) return hostname.toLowerCase();
+
+  const suffix2 = parts.slice(-2).join('.');
+  if (MULTIPART_PUBLIC_SUFFIXES.has(suffix2) && parts.length >= 3) {
+    return parts.slice(-3).join('.');
+  }
+
+  return parts.slice(-2).join('.');
+};
+
 /**
  * Homograph/Punycode Detector
  * Checks for non-ASCII characters or punycode prefix.
@@ -32,8 +65,8 @@ export const detectHomograph = (domain) => {
   if (!domain) return false;
   
   // Check for non-ASCII characters
-  const nonAsciiRegex = /[^\x00-\x7F]/;
-  if (nonAsciiRegex.test(domain)) return true;
+  const hasNonAscii = [...domain].some((char) => char.charCodeAt(0) > 127);
+  if (hasNonAscii) return true;
 
   // Check for punycode prefix
   if (domain.includes('xn--')) return true;
@@ -48,7 +81,9 @@ export const detectHomograph = (domain) => {
  * @returns {object} { score, breakdown }
  */
 export const calculateRiskScore = (url) => {
-  if (!url) return { score: 0, entropy: 0, breakdown: [] };
+  if (!url) {
+    return { score: 0, entropy: 0, breakdown: [], notes: [], isHomograph: false, hostname: null, isMalformed: false };
+  }
 
   const TRUSTED_DOMAINS = ['google.com', 'github.com', 'microsoft.com', 'apple.com', 'jisuniversity.ac.in', 'linkedin.com', 'youtube.com'];
 
@@ -58,28 +93,34 @@ export const calculateRiskScore = (url) => {
   let score = 0;
   let overallEntropy = 0;
   const breakdown = [];
+  const notes = [];
+  let isHomograph = false;
+  let hostname = null;
 
   try {
     const parsedUrl = new URL(cleanUrl.includes('://') ? cleanUrl : 'http://' + cleanUrl);
-    const protocol = parsedUrl.protocol;
-    const hostname = parsedUrl.hostname;
-    const pathname = parsedUrl.pathname;
+    hostname = parsedUrl.hostname.toLowerCase();
     
     const parts = hostname.split('.');
     let subdomain = '';
-    let rootDomain = hostname;
+    const rootDomain = getRootDomain(hostname);
     
     if (parts.length > 2) {
-      subdomain = parts.slice(0, parts.length - 2).join('.');
-      rootDomain = parts.slice(parts.length - 2).join('.');
+      const rootPartsLength = rootDomain.split('.').length;
+      subdomain = parts.slice(0, parts.length - rootPartsLength).join('.');
     }
 
     // 1. Global Trust Whitelist (Short-Circuit Logic)
     if (TRUSTED_DOMAINS.includes(rootDomain)) {
+      notes.push({ factor: 'Trusted Domain', detail: `${rootDomain} is in trusted allowlist` });
       return { 
         score: 0, 
-        entropy: 0, 
-        breakdown: [{ factor: 'TRUSTED DOMAIN DETECTED - SCAN BYPASSED' }] 
+        entropy: 0,
+        breakdown: [],
+        notes,
+        isHomograph: false,
+        hostname,
+        isMalformed: false
       };
     }
 
@@ -102,7 +143,8 @@ export const calculateRiskScore = (url) => {
       }
     }
 
-    if (detectHomograph(hostname)) {
+    isHomograph = detectHomograph(hostname);
+    if (isHomograph) {
       score += 45;
       breakdown.push({ factor: 'Suspicious Characters (Punycode/Homograph)', value: '+45' });
     }
@@ -127,13 +169,26 @@ export const calculateRiskScore = (url) => {
       });
     }
 
-  } catch (error) {
-    breakdown.push({ factor: 'Malformed URL', value: 'Error' });
+  } catch {
+    notes.push({ factor: 'Malformed URL', detail: 'Input could not be parsed as a URL' });
+    return {
+      score: 0,
+      entropy: 0,
+      breakdown: [],
+      notes,
+      isHomograph: false,
+      hostname: null,
+      isMalformed: true
+    };
   }
 
   return {
     score: Math.min(score, 100),
     entropy: overallEntropy,
-    breakdown
+    breakdown,
+    notes,
+    isHomograph,
+    hostname,
+    isMalformed: false
   };
 };

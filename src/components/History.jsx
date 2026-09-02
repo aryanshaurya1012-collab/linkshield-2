@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Database, Clock, ShieldAlert, CheckCircle, AlertTriangle, Download } from 'lucide-react';
 import { getUserScans } from '../utils/db';
-import { motion } from 'framer-motion';
 
 export default function History({ user }) {
   const [scans, setScans] = useState([]);
@@ -30,16 +29,21 @@ export default function History({ user }) {
 
   const exportToCSV = () => {
     if (scans.length === 0) return;
+
+    const escapeCsvField = (value) => {
+      const stringValue = String(value ?? '');
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    };
     
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "Timestamp,URL,Score,Risk Level\n";
     
     scans.forEach(scan => {
-      const date = new Date(scan.timestamp).toLocaleString().replace(/,/g, '');
-      const url = scan.url.replace(/,/g, '%2C');
-      const score = scan.score;
+      const date = new Date(scan.timestamp).toLocaleString();
+      const url = scan.url;
+      const score = scan.score ?? 0;
       const level = getRiskLabel(score);
-      csvContent += `${date},${url},${score},${level}\n`;
+      csvContent += `${escapeCsvField(date)},${escapeCsvField(url)},${escapeCsvField(score)},${escapeCsvField(level)}\n`;
     });
     
     const encodedUri = encodeURI(csvContent);
@@ -52,12 +56,7 @@ export default function History({ user }) {
   };
 
   return (
-    <motion.div 
-      className="w-full flex flex-col gap-6 relative z-10 pb-10"
-      initial={{ opacity: 0, y: 15 }} 
-      animate={{ opacity: 1, y: 0 }} 
-      transition={{ duration: 0.4, ease: 'easeOut' }}
-    >
+    <div className="w-full flex flex-col gap-6 relative z-10 pb-10">
       <div className="glass-panel rounded-2xl p-8 relative overflow-hidden border border-[#00FFFF]/40 shadow-[0_0_20px_rgba(0,255,255,0.15)] group">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#00FFFF] to-[#FF00FF]"></div>
         
@@ -140,6 +139,6 @@ export default function History({ user }) {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }

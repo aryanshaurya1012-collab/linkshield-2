@@ -1,16 +1,65 @@
-# React + Vite
+# LinkShield
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+LinkShield is a Vite + React phishing-risk simulator that analyzes URLs locally in the browser, stores per-user scan history, and provides a cyber-themed dashboard for scanning and review.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Client-side login/register flow with salted password hashing (PBKDF2 via Web Crypto).
+- URL risk scoring engine based on:
+  - Shannon entropy,
+  - homograph/punycode detection,
+  - risky TLD checks,
+  - phishing keyword signals.
+- Per-user scan history stored in localStorage.
+- CSV export of scan history.
+- Route protection for authenticated scanner/history views.
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React 19
+- React Router
+- Vite 7
+- Tailwind CSS
+- Framer Motion
+- Lucide React icons
 
-## Expanding the ESLint configuration
+## Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```text
+src/
+  main.jsx                # React bootstrap
+  App.jsx                 # Router, layout, auth gating, top-level state
+  index.css               # Tailwind layers + global styles/animations
+  components/
+    Auth.jsx              # Login/register UI and validation
+    Scanner.jsx           # URL scan flow, logs, threat UI
+    History.jsx           # Scan archive + CSV export
+  utils/
+    engine.js             # Risk scoring and URL/domain analysis logic
+    db.js                 # localStorage persistence and auth/session helpers
+```
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+App runs by default on `http://localhost:5173`.
+
+## Scripts
+
+- `npm run dev` - start development server
+- `npm run build` - production build
+- `npm run preview` - preview production build
+- `npm run lint` - run ESLint
+- `npm test` - run Node test suite (`node --test`)
+
+## Security and Limitations
+
+- This is a client-side demo app and not production-grade security.
+- Password verifiers use PBKDF2 + per-user random salt and are kept only in memory for the active runtime (legacy localStorage credential data is cleared on load).
+- Session metadata and scan history are still stored client-side.
+- There is no server-side identity verification, secure cookie/session backend, or remote threat intelligence API.
+- Detection is heuristic-based and can produce false positives/false negatives.

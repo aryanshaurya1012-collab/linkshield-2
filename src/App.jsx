@@ -17,6 +17,7 @@ const MainLayout = ({ user, setUser, uptime, totalScans, setTotalScans }) => {
   const handleLogout = async () => {
     await logoutUser();
     setUser(null);
+    setTotalScans(0);
   };
 
   return (
@@ -109,13 +110,11 @@ function App() {
   const [totalScans, setTotalScans] = useState(0);
 
   useEffect(() => {
-    if (user) {
-      getUserScans(user.id).then(data => {
-        setTotalScans(data.length);
-      });
-    } else {
-      setTotalScans(0);
-    }
+    if (!user) return;
+
+    getUserScans(user.id).then(data => {
+      setTotalScans(data.length);
+    });
   }, [user]);
 
   // Uptime hook
