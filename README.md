@@ -1,42 +1,43 @@
 # LinkShield
 
-LinkShield is a Vite + React phishing-risk simulator that analyzes URLs locally in the browser, stores per-user scan history, and provides a cyber-themed dashboard for scanning and review.
+LinkShield is a high-performance cyber threat intelligence dashboard and phishing-risk simulator. It analyzes URLs locally in the browser, calculates Shannon entropy, detects homographs and suspicious TLDs, identifies spoofing and evasion vectors, stores per-operator forensic scan history, and provides an immersive cyberpunk command center.
 
-## Features
+## Core Capabilities & Threat Engine
 
-- Client-side login/register flow with salted password hashing (PBKDF2 via Web Crypto).
-- URL risk scoring engine based on:
-  - Shannon entropy,
-  - homograph/punycode detection,
-  - risky TLD checks,
-  - phishing keyword signals.
-- Per-user scan history stored in localStorage.
-- CSV export of scan history.
-- Route protection for authenticated scanner/history views.
+- **Client-Side Auth Vault**: PBKDF2 password derivation (120,000 SHA-256 iterations) with per-user cryptographic salts and session persistence across reloads.
+- **Shannon Entropy Engine**: Measures information density and character randomness $H(X)$ to expose Domain Generation Algorithms (DGA).
+- **Homograph & Punycode Detection**: Flags internationalized domain name (IDN) homograph attacks and `xn--` spoofing prefixes.
+- **Authority & Credential Spoofing**: Identifies deceptive `@` embedded userinfo tricks that obscure genuine destination hostnames.
+- **Raw IP Vector Detection**: Flags direct IPv4 and IPv6 hostnames commonly deployed by phishing kits and Command & Control (C2) servers.
+- **Brand Target Impersonation**: Detects high-value target brand names (PayPal, Google, Microsoft, Apple, Banking) nested within untrusted subdomains or paths.
+- **URL Shortener Detection**: Flags shortened links (bit.ly, tinyurl, etc.) that mask malicious destinations.
+- **Multipart Suffix Resolution**: Parses global multi-part ccTLDs (`.ac.in`, `.co.uk`, `.gov.au`, etc.) to prevent false-positive brand flags on trusted institutions.
+- **Forensic Threat History**: Local encrypted storage of scans with search filtering, risk-tier sorting, record deletion, and robust RFC-compliant CSV forensics export.
 
 ## Tech Stack
 
-- React 19
-- React Router
-- Vite 7
-- Tailwind CSS
-- Framer Motion
-- Lucide React icons
+- **React 19**
+- **React Router 7**
+- **Vite 7**
+- **Tailwind CSS 3**
+- **Lucide React**
+- **Web Crypto API & Web Audio API**
 
 ## Project Structure
 
 ```text
 src/
-  main.jsx                # React bootstrap
-  App.jsx                 # Router, layout, auth gating, top-level state
-  index.css               # Tailwind layers + global styles/animations
+  main.jsx                # Application bootstrap
+  App.jsx                 # Router, layout, telemetry ticker, auth gating
+  index.css               # Cyberpunk styling, glowing panels, custom scrollbars
   components/
-    Auth.jsx              # Login/register UI and validation
-    Scanner.jsx           # URL scan flow, logs, threat UI
-    History.jsx           # Scan archive + CSV export
+    Auth.jsx              # Operator authentication sequence (login/register)
+    Scanner.jsx           # Cyber vector input, live telemetry logs, risk gauge, alert modal
+    History.jsx           # Threat intel archive, search filter, forensic CSV export
   utils/
-    engine.js             # Risk scoring and URL/domain analysis logic
-    db.js                 # localStorage persistence and auth/session helpers
+    engine.js             # Risk scoring heuristics, entropy calculations, domain parsing
+    engine.test.js        # Node test suite for detection heuristics
+    db.js                 # Client-side salted vault & forensic scan storage
 ```
 
 ## Getting Started
@@ -50,16 +51,8 @@ App runs by default on `http://localhost:5173`.
 
 ## Scripts
 
-- `npm run dev` - start development server
-- `npm run build` - production build
-- `npm run preview` - preview production build
-- `npm run lint` - run ESLint
-- `npm test` - run Node test suite (`node --test`)
-
-## Security and Limitations
-
-- This is a client-side demo app and not production-grade security.
-- Password verifiers use PBKDF2 + per-user random salt and are kept only in memory for the active runtime (legacy localStorage credential data is cleared on load).
-- Session metadata and scan history are still stored client-side.
-- There is no server-side identity verification, secure cookie/session backend, or remote threat intelligence API.
-- Detection is heuristic-based and can produce false positives/false negatives.
+- `npm run dev` - Start Vite development server
+- `npm run build` - Production build (output in `/dist`)
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint checks
+- `npm test` - Run automated test suite (`node --test`)

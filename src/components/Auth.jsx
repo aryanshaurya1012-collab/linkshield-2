@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, User, Lock, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Shield, User, Lock, ArrowRight, ShieldAlert, Loader2 } from 'lucide-react';
 import { loginUser, registerUser } from '../utils/db';
 
 const BANNED_DOMAINS = [
@@ -18,18 +18,23 @@ export default function Auth({ onLogin }) {
   const navigate = useNavigate();
 
   const validateUsername = (input) => {
+    const trimmed = input.trim();
+    if (!trimmed) {
+      return 'Operator ID is required.';
+    }
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^\+?[\d\s-]{10,}$/;
     
-    if (emailRegex.test(input)) {
-      const domain = input.split('@')[1].toLowerCase();
+    if (emailRegex.test(trimmed)) {
+      const domain = trimmed.split('@')[1].toLowerCase();
       if (BANNED_DOMAINS.some(d => domain.includes(d))) {
         return 'Temporary/disposable email domains are strictly prohibited.';
       }
       return null;
     }
     
-    if (phoneRegex.test(input)) {
+    if (phoneRegex.test(trimmed)) {
       return null;
     }
     
@@ -40,7 +45,8 @@ export default function Auth({ onLogin }) {
     e.preventDefault();
     setError('');
     
-    const validationError = validateUsername(username);
+    const trimmedUsername = username.trim();
+    const validationError = validateUsername(trimmedUsername);
     if (validationError) {
       setError(validationError);
       return;
@@ -55,14 +61,14 @@ export default function Auth({ onLogin }) {
     try {
       let user;
       if (isLogin) {
-        user = await loginUser(username, password);
+        user = await loginUser(trimmedUsername, password);
       } else {
-        user = await registerUser(username, password);
+        user = await registerUser(trimmedUsername, password);
       }
       onLogin(user);
       navigate('/scanner');
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Authentication sequence failed.');
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +111,7 @@ export default function Auth({ onLogin }) {
               <input
                 type="text"
                 required
+                autoComplete="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="operator@domain.com"
@@ -124,6 +131,7 @@ export default function Auth({ onLogin }) {
               <input
                 type="password"
                 required
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
@@ -138,7 +146,10 @@ export default function Auth({ onLogin }) {
             className="w-full mt-8 flex items-center justify-center gap-2 bg-[#00FFFF]/10 hover:bg-[#00FFFF]/20 border border-[#00FFFF] text-[#00FFFF] py-3 rounded-xl font-bold font-mono uppercase tracking-widest transition-all shadow-[0_0_15px_rgba(0,255,255,0.2)] hover:shadow-[0_0_25px_rgba(0,255,255,0.4)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
-              <span className="animate-pulse">Authenticating...</span>
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span className="animate-pulse">Authenticating Sequence...</span>
+              </>
             ) : (
               <>
                 {isLogin ? 'Grant Access' : 'Establish Link'}
@@ -152,6 +163,7 @@ export default function Auth({ onLogin }) {
           <p className="text-[#00FFFF]/60 font-mono text-sm">
             {isLogin ? 'No active clearance?' : 'Already have clearance?'}
             <button
+              type="button"
               onClick={() => { setIsLogin(!isLogin); setError(''); }}
               className="ml-2 text-[#00FFFF] font-bold hover:underline tracking-wide"
             >

@@ -23,19 +23,59 @@ export const calculateEntropy = (str) => {
 };
 
 const MULTIPART_PUBLIC_SUFFIXES = new Set([
-  'ac.in', 'co.in', 'gov.in', 'net.in', 'org.in',
-  'co.uk', 'org.uk', 'gov.uk', 'ac.uk',
-  'com.au', 'net.au', 'org.au',
-  'co.jp', 'ne.jp', 'or.jp',
-  'co.nz', 'org.nz'
+  'ac.in', 'co.in', 'gov.in', 'net.in', 'org.in', 'edu.in', 'res.in',
+  'co.uk', 'org.uk', 'gov.uk', 'ac.uk', 'net.uk',
+  'com.au', 'net.au', 'org.au', 'edu.au', 'gov.au',
+  'co.jp', 'ne.jp', 'or.jp', 'ac.jp', 'go.jp',
+  'co.nz', 'org.nz', 'net.nz', 'govt.nz',
+  'com.sg', 'edu.sg', 'gov.sg', 'net.sg',
+  'com.br', 'gov.br', 'org.br',
+  'co.za', 'org.za', 'gov.za',
+  'com.hk', 'edu.hk', 'gov.hk',
+  'co.kr', 'ne.kr', 'or.kr',
+  'com.mx', 'gob.mx', 'edu.mx'
 ]);
 
+const TRUSTED_DOMAINS = [
+  'google.com',
+  'github.com',
+  'microsoft.com',
+  'apple.com',
+  'jisuniversity.ac.in',
+  'linkedin.com',
+  'youtube.com',
+  'wikipedia.org',
+  'amazon.com'
+];
+
+const RISKY_TLDS = new Set([
+  '.xyz', '.top', '.bit', '.cc', '.loan', '.tk', '.ml', '.ga', '.cf', '.gq',
+  '.click', '.link', '.rest', '.buzz', '.work', '.tokyo', '.fit', '.surf',
+  '.gdn', '.icu', '.sbs', '.cfd', '.quest', '.country', '.stream', '.men',
+  '.party', '.racing', '.download'
+]);
+
+const URL_SHORTENERS = new Set([
+  'bit.ly', 'tinyurl.com', 't.co', 'is.gd', 'buff.ly', 'ow.ly',
+  'cutt.ly', 'rb.gy', 'goo.gl', 'shorturl.at', 'bl.ink'
+]);
+
+const BRAND_TARGETS = [
+  'paypal', 'google', 'microsoft', 'apple', 'netflix',
+  'amazon', 'facebook', 'instagram', 'whatsapp', 'binance',
+  'coinbase', 'chase', 'wellsfargo', 'bankofamerica'
+];
+
 export const extractHostname = (url) => {
-  if (!url) return null;
+  if (!url || typeof url !== 'string') return null;
+
+  const trimmed = url.trim();
+  if (!trimmed) return null;
 
   try {
-    const parsedUrl = new URL(url.includes('://') ? url : `http://${url}`);
-    return parsedUrl.hostname.toLowerCase();
+    const parsedUrl = new URL(trimmed.includes('://') ? trimmed : `http://${trimmed}`);
+    const host = parsedUrl.hostname.toLowerCase();
+    return host || null;
   } catch {
     return null;
   }
@@ -44,8 +84,15 @@ export const extractHostname = (url) => {
 export const getRootDomain = (hostname) => {
   if (!hostname) return '';
 
-  const parts = hostname.toLowerCase().split('.');
-  if (parts.length <= 2) return hostname.toLowerCase();
+  const lower = hostname.toLowerCase();
+
+  // If hostname is an IP address, return raw IP
+  if (/^(\d{1,3}\.){3}\d{1,3}$/.test(lower) || lower.startsWith('[') || /^[0-9a-f:]+$/i.test(lower)) {
+    return lower;
+  }
+
+  const parts = lower.split('.');
+  if (parts.length <= 2) return lower;
 
   const suffix2 = parts.slice(-2).join('.');
   if (MULTIPART_PUBLIC_SUFFIXES.has(suffix2) && parts.length >= 3) {
@@ -76,19 +123,22 @@ export const detectHomograph = (domain) => {
 
 /**
  * Risk Scoring Algorithm
- * Combines entropy, TLD risk, and sensitive keywords into a 0-100 score.
+ * Combines entropy, TLD risk, spoofing heuristics, and sensitive keywords into a 0-100 score.
  * @param {string} url 
- * @returns {object} { score, breakdown }
+ * @returns {object} { score, breakdown, notes, entropy, isHomograph, hostname, isMalformed }
  */
 export const calculateRiskScore = (url) => {
-  if (!url) {
+  if (!url || typeof url !== 'string') {
     return { score: 0, entropy: 0, breakdown: [], notes: [], isHomograph: false, hostname: null, isMalformed: false };
   }
 
-  const TRUSTED_DOMAINS = ['google.com', 'github.com', 'microsoft.com', 'apple.com', 'jisuniversity.ac.in', 'linkedin.com', 'youtube.com'];
+  const trimmed = url.trim();
+  if (!trimmed) {
+    return { score: 0, entropy: 0, breakdown: [], notes: [], isHomograph: false, hostname: null, isMalformed: false };
+  }
 
-  // Query String Stripping: Remove everything from ? or # to the end
-  const cleanUrl = url.split('?')[0].split('#')[0];
+  // Query String & Hash Stripping for base vector analysis
+  const cleanUrl = trimmed.split('?')[0].split('#')[0];
 
   let score = 0;
   let overallEntropy = 0;
@@ -98,13 +148,17 @@ export const calculateRiskScore = (url) => {
   let hostname = null;
 
   try {
-    const parsedUrl = new URL(cleanUrl.includes('://') ? cleanUrl : 'http://' + cleanUrl);
-    hostname = parsedUrl.hostname.toLowerCase();
-    
+    const rawParsedUrl = new URL(cleanUrl.includes('://') ? cleanUrl : `http://${cleanUrl}`);
+    hostname = rawParsedUrl.hostname.toLowerCase();
+
+    if (!hostname) {
+      throw new Error('Invalid host');
+    }
+
+    const rootDomain = getRootDomain(hostname);
     const parts = hostname.split('.');
     let subdomain = '';
-    const rootDomain = getRootDomain(hostname);
-    
+
     if (parts.length > 2) {
       const rootPartsLength = rootDomain.split('.').length;
       subdomain = parts.slice(0, parts.length - rootPartsLength).join('.');
@@ -124,6 +178,27 @@ export const calculateRiskScore = (url) => {
       };
     }
 
+    // 2. Raw IP Address Hostname Detection
+    const isIpv4 = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+    const isIpv6 = hostname.startsWith('[') || (hostname.includes(':') && /^[0-9a-f:]+$/i.test(hostname));
+    if (isIpv4 || isIpv6) {
+      score += 45;
+      breakdown.push({ factor: 'Raw IP Address Hostname', value: '+45' });
+    }
+
+    // 3. Embedded Credentials / Authority Spoofing (@ symbol in original URL authority)
+    if (rawParsedUrl.username || cleanUrl.includes('@')) {
+      score += 45;
+      breakdown.push({ factor: 'Embedded Credentials / Fake Authority (@)', value: '+45' });
+    }
+
+    // 4. URL Shortener Detection
+    if (URL_SHORTENERS.has(hostname) || URL_SHORTENERS.has(rootDomain)) {
+      score += 20;
+      breakdown.push({ factor: 'URL Shortener (Masked Destination)', value: '+20' });
+    }
+
+    // 5. Entropy Analysis
     overallEntropy = calculateEntropy(hostname);
 
     if (subdomain) {
@@ -143,31 +218,61 @@ export const calculateRiskScore = (url) => {
       }
     }
 
+    // 6. Homograph / Punycode
     isHomograph = detectHomograph(hostname);
     if (isHomograph) {
       score += 45;
       breakdown.push({ factor: 'Suspicious Characters (Punycode/Homograph)', value: '+45' });
     }
 
-    const riskyTlds = ['.xyz', '.top', '.bit', '.cc', '.loan', '.tk', '.ml', '.ga', '.cf', '.gq'];
+    // 7. Risky TLDs
     const tldMatch = hostname.match(/\.[a-z0-9]+$/i);
-    if (tldMatch && riskyTlds.includes(tldMatch[0].toLowerCase())) {
+    if (tldMatch && RISKY_TLDS.has(tldMatch[0].toLowerCase())) {
       score += 30;
       breakdown.push({ factor: 'Risky TLD', value: '+30' });
     }
 
+    // 8. Brand Spoofing in Subdomain / Hostname for non-trusted domains
+    const brandMatch = BRAND_TARGETS.find(brand => {
+      const isTargetBrand = rootDomain.split('.')[0] === brand;
+      if (isTargetBrand) return false;
+      return hostname.includes(brand);
+    });
+
+    if (brandMatch) {
+      score += 35;
+      breakdown.push({ factor: `Brand Spoofing Target (${brandMatch})`, value: '+35' });
+    }
+
+    // 9. Excessive Subdomain Nesting (e.g. login.secure.verify.paypal.fake.com)
+    if (subdomain && subdomain.split('.').length >= 3) {
+      score += 25;
+      breakdown.push({ factor: 'Excessive Subdomain Nesting', value: '+25' });
+    }
+
+    // 10. Excessive Hyphens (domain squatted / obfuscated keywords)
+    const hyphenCount = (hostname.match(/-/g) || []).length;
+    if (hyphenCount >= 3) {
+      score += 20;
+      breakdown.push({ factor: 'Excessive Domain Hyphenation', value: '+20' });
+    }
+
+    // 11. Suspicious Port Detection
+    if (rawParsedUrl.port && !['80', '443', '3000', '5173', '8080'].includes(rawParsedUrl.port)) {
+      score += 25;
+      breakdown.push({ factor: `Non-Standard Port (${rawParsedUrl.port})`, value: '+25' });
+    }
+
+    // 12. Contextual Sensitive Keywords
     const sensitiveKeywords = ['login', 'verify', 'secure', 'banking', 'paypal', 'netflix', 'crypto', 'signin', 'auth'];
     const lowerUrl = cleanUrl.toLowerCase();
     
-    // 3. Contextual Keyword Penalties (Only if not trusted)
-    if (!TRUSTED_DOMAINS.includes(rootDomain)) {
-      sensitiveKeywords.forEach(kw => {
-        if (lowerUrl.includes(kw)) {
-          score += 20;
-          breakdown.push({ factor: `Phishing Keyword (${kw})`, value: '+20' });
-        }
-      });
-    }
+    sensitiveKeywords.forEach(kw => {
+      if (lowerUrl.includes(kw)) {
+        score += 20;
+        breakdown.push({ factor: `Phishing Keyword (${kw})`, value: '+20' });
+      }
+    });
 
   } catch {
     notes.push({ factor: 'Malformed URL', detail: 'Input could not be parsed as a URL' });
