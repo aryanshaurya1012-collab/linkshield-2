@@ -21,10 +21,10 @@ const MainLayout = ({ user, setUser, uptime, totalScans, setTotalScans }) => {
   };
 
   return (
-    <div className="min-h-screen p-4 md:p-8 flex flex-col items-center w-full pt-12 md:pt-16">
+    <div className="min-h-screen flex flex-col items-center w-full">
       
-      {/* Global Threat Ticker */}
-      <div className="fixed top-0 left-0 w-full bg-[#00FFFF]/5 border-b border-[#00FFFF]/30 py-1.5 overflow-hidden z-20 shadow-[0_0_15px_rgba(0,255,255,0.1)] backdrop-blur-md">
+      {/* Global Threat Ticker - In normal layout flow to prevent overlapping header on scroll */}
+      <div className="w-full bg-slate-950/90 border-b border-[#00FFFF]/30 py-2 overflow-hidden shadow-[0_0_15px_rgba(0,255,255,0.1)] backdrop-blur-md relative z-10">
         <div className="whitespace-nowrap animate-marquee inline-block font-mono text-[#00FFFF] text-[10px] md:text-xs font-bold tracking-widest drop-shadow-[0_0_5px_rgba(0,255,255,0.8)] uppercase">
           <span className="mx-8">[LIVE] Analyzing Homograph patterns in .top &amp; .xyz domains...</span>
           <span className="mx-8">[DB] Local Heuristic &amp; Entropy Engine: ACTIVE</span>
@@ -35,10 +35,10 @@ const MainLayout = ({ user, setUser, uptime, totalScans, setTotalScans }) => {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 w-full max-w-6xl mt-8 flex-1">
+      <div className="flex flex-col gap-6 w-full max-w-6xl p-4 md:p-8 flex-1">
         
         {/* Header (Branding & Navigation) */}
-        <header className="w-full flex flex-col xl:flex-row justify-between items-center gap-4 relative z-40">
+        <header className="w-full flex flex-col xl:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-[#00FFFF]/10 rounded-xl border border-[#00FFFF]/30 shadow-[0_0_15px_rgba(0,255,255,0.3)]">
               <Shield className="w-8 h-8 text-[#00FFFF] drop-shadow-[0_0_8px_rgba(0,255,255,0.8)]" />
