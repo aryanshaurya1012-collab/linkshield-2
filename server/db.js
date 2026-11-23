@@ -7,6 +7,9 @@ const dbPath = path.resolve(__dirname, '../linkshield.db');
 
 export const db = new DatabaseSync(dbPath);
 
+// Disable foreign key constraint enforcement so external identity IDs (e.g. Clerk user_...) never fail scans
+db.exec('PRAGMA foreign_keys = OFF;');
+
 // Initialize schema
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
@@ -35,8 +38,7 @@ db.exec(`
     headers_data TEXT,
     breakdown TEXT,
     threat_notes TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
   CREATE TABLE IF NOT EXISTS threat_intel (
@@ -52,6 +54,39 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_scans_created ON scans(created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_threat_domain ON threat_intel(domain);
 `);
+
+// Seamless migration: strip legacy FOREIGN KEY constraint from existing scans table if present
+try {
+  const fkList = db.prepare('PRAGMA foreign_key_list(scans)').all();
+  if (fkList.length > 0) {
+    db.exec(`
+      CREATE TABLE scans_migrated (
+        id TEXT PRIMARY KEY,
+        user_id TEXT,
+        url TEXT NOT NULL,
+        hostname TEXT NOT NULL,
+        score INTEGER NOT NULL,
+        risk_level TEXT NOT NULL,
+        entropy REAL NOT NULL,
+        is_homograph INTEGER NOT NULL DEFAULT 0,
+        ip TEXT,
+        ssl_data TEXT,
+        dns_data TEXT,
+        headers_data TEXT,
+        breakdown TEXT,
+        threat_notes TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
+      INSERT INTO scans_migrated SELECT * FROM scans;
+      DROP TABLE scans;
+      ALTER TABLE scans_migrated RENAME TO scans;
+      CREATE INDEX IF NOT EXISTS idx_scans_user ON scans(user_id);
+      CREATE INDEX IF NOT EXISTS idx_scans_created ON scans(created_at DESC);
+    `);
+  }
+} catch {
+  // Migration already applied or not required
+}
 
 // Seed default known IOCs (Indicators of Compromise) if empty
 const countRow = db.prepare('SELECT COUNT(*) as cnt FROM threat_intel').get();

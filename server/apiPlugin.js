@@ -166,6 +166,19 @@ export function linkshieldApiPlugin() {
               return sendJson(res, 400, { error: 'Valid URL vector is required.' });
             }
 
+            // If userId is provided (e.g. from Clerk), ensure record exists in users table
+            if (userId) {
+              try {
+                db.prepare(`
+                  INSERT INTO users (id, email, name, provider)
+                  VALUES (?, ?, ?, 'clerk')
+                  ON CONFLICT(id) DO NOTHING
+                `).run(userId, `${userId}@clerk.user`, 'Clerk Operator');
+              } catch {
+                // Ignore any upsert errors
+              }
+            }
+
             // Execute real-time network probes and heuristics
             const scanResult = await performDeepScan(targetUrl);
             const scanId = crypto.randomUUID();
@@ -290,8 +303,8 @@ export function linkshieldApiPlugin() {
           // --- STATS: EXECUTIVE DASHBOARD TELEMETRY ---
           if (url.pathname === '/api/stats' && req.method === 'GET') {
             const totalRow = db.prepare('SELECT COUNT(*) as total FROM scans').get();
-            const criticalRow = db.prepare('SELECT COUNT(*) as critical FROM scans WHERE risk_level IN ("CRITICAL", "HIGH")').get();
-            const cleanRow = db.prepare('SELECT COUNT(*) as clean FROM scans WHERE risk_level = "CLEAN"').get();
+            const criticalRow = db.prepare("SELECT COUNT(*) as critical FROM scans WHERE risk_level IN ('CRITICAL', 'HIGH')").get();
+            const cleanRow = db.prepare("SELECT COUNT(*) as clean FROM scans WHERE risk_level = 'CLEAN'").get();
             const avgEntropyRow = db.prepare('SELECT AVG(entropy) as avg_entropy FROM scans').get();
 
             const distributionRows = db.prepare(`
