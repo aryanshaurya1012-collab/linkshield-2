@@ -57,3 +57,112 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+
+/* ==========================================================================
+   Clerk High-Contrast Dark Theme Overrides
+   Ensures crystal-clear readability for headers, inputs, social buttons & text
+   ========================================================================== */
+.cl-card {
+  background-color: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75) !important;
+}
+
+.cl-headerTitle {
+  color: #f8fafc !important;
+  font-weight: 800 !important;
+}
+
+.cl-headerSubtitle {
+  color: #94a3b8 !important;
+}
+
+.cl-socialButtonsBlockButton {
+  background-color: #020617 !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}
+
+.cl-socialButtonsBlockButtonText {
+  color: #f8fafc !important;
+  font-weight: 600 !important;
+}
+
+.cl-socialButtonsBlockButton:hover {
+  background-color: #1e293b !important;
+  border-color: #475569 !important;
+}
+
+.cl-dividerLine {
+  background-color: #334155 !important;
+}
+
+.cl-dividerText {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+}
+
+.cl-formFieldLabel {
+  color: #e2e8f0 !important;
+  font-weight: 600 !important;
+}
+
+.cl-formFieldInput {
+  background-color: #020617 !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+  border-radius: 0.75rem !important;
+}
+
+.cl-formFieldInput::placeholder {
+  color: #64748b !important;
+}
+
+.cl-formFieldInput:focus {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 1px #10b981 !important;
+  background-color: #020617 !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #10b981 !important;
+  color: #020617 !important;
+  font-weight: 700 !important;
+  border-radius: 0.75rem !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #059669 !important;
+}
+
+.cl-footerActionText {
+  color: #94a3b8 !important;
+}
+
+.cl-footerActionLink {
+  color: #34d399 !important;
+  font-weight: 600 !important;
+}
+
+.cl-footerActionLink:hover {
+  color: #6ee7b7 !important;
+}
+
+.cl-identityPreviewText {
+  color: #f8fafc !important;
+}
+
+.cl-identityPreviewEditButton {
+  color: #34d399 !important;
+}
+
+.cl-formResendCodeLink {
+  color: #34d399 !important;
+}
+
+.cl-otpCodeFieldInput {
+  background-color: #020617 !important;
+  border: 1px solid #334155 !important;
+  color: #f8fafc !important;
+}

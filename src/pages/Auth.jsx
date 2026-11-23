@@ -4,6 +4,41 @@ import { SignIn, SignUp } from '@clerk/react';
 import { dark } from '@clerk/themes';
 import { Shield, ArrowLeft, KeyRound, ExternalLink, CheckCircle2 } from 'lucide-react';
 
+const clerkAuthAppearance = {
+  baseTheme: dark,
+  variables: {
+    colorPrimary: '#10b981',
+    colorBackground: '#0f172a',
+    colorForeground: '#f8fafc',
+    colorNeutral: '#f8fafc',
+    colorInput: '#020617',
+    colorInputForeground: '#f8fafc',
+    colorText: '#f8fafc',
+    colorTextSecondary: '#94a3b8',
+    colorTextOnPrimaryBackground: '#020617',
+    borderRadius: '0.75rem',
+  },
+  elements: {
+    rootBox: 'w-full',
+    card: 'border border-slate-700/80 shadow-2xl bg-slate-900 text-slate-100 rounded-2xl',
+    headerTitle: 'text-slate-100 font-extrabold text-xl',
+    headerSubtitle: 'text-slate-400 text-xs',
+    socialButtonsBlockButton: 'bg-slate-950 border border-slate-700 hover:bg-slate-800 hover:border-slate-600 text-slate-100 transition-colors',
+    socialButtonsBlockButtonText: 'text-slate-100 font-semibold text-xs',
+    dividerLine: 'bg-slate-800',
+    dividerText: 'text-slate-400 text-xs uppercase font-medium',
+    formFieldLabel: 'text-slate-200 text-xs font-semibold',
+    formFieldInput: 'bg-slate-950 border-slate-700 text-slate-100 placeholder:text-slate-500 text-xs rounded-xl focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500',
+    formButtonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-xl transition-all shadow-md active:scale-95',
+    footerActionText: 'text-slate-400 text-xs',
+    footerActionLink: 'text-emerald-400 hover:text-emerald-300 font-semibold text-xs',
+    identityPreviewText: 'text-slate-200 text-xs font-medium',
+    identityPreviewEditButton: 'text-emerald-400 hover:text-emerald-300 text-xs',
+    formResendCodeLink: 'text-emerald-400 hover:text-emerald-300 text-xs',
+    otpCodeFieldInput: 'bg-slate-950 border-slate-700 text-slate-100 text-lg rounded-xl',
+  }
+};
+
 export default function Auth({ isClerkConfigured, initialMode = 'sign-in' }) {
   const [mode, setMode] = useState(initialMode); // 'sign-in' or 'sign-up'
   const [manualKey, setManualKey] = useState('');
@@ -15,7 +50,6 @@ export default function Auth({ isClerkConfigured, initialMode = 'sign-in' }) {
       alert('A valid Clerk Publishable Key starts with "pk_test_" or "pk_live_".');
       return;
     }
-    // Inform user how to persist in .env
     setKeySaved(true);
   };
 
@@ -50,46 +84,14 @@ export default function Auth({ isClerkConfigured, initialMode = 'sign-in' }) {
 
         {/* When Clerk is Configured with Publishable Key */}
         {isClerkConfigured ? (
-          <div className="flex flex-col items-center justify-center">
+          <div className="flex flex-col items-center justify-center w-full">
             {mode === 'sign-in' ? (
               <SignIn
-                appearance={{
-                  baseTheme: dark,
-                  variables: {
-                    colorPrimary: '#10b981',
-                    colorBackground: '#0b0f19',
-                    colorInputBackground: '#050811',
-                    colorText: '#f1f5f9',
-                    colorTextSecondary: '#94a3b8',
-                    borderRadius: '0.75rem',
-                  },
-                  elements: {
-                    rootBox: 'w-full',
-                    card: 'border border-slate-800 shadow-2xl bg-slate-900/95 w-full rounded-2xl',
-                    formButtonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold',
-                    footerActionLink: 'text-emerald-400 hover:text-emerald-300 font-semibold',
-                  }
-                }}
+                appearance={clerkAuthAppearance}
               />
             ) : (
               <SignUp
-                appearance={{
-                  baseTheme: dark,
-                  variables: {
-                    colorPrimary: '#10b981',
-                    colorBackground: '#0b0f19',
-                    colorInputBackground: '#050811',
-                    colorText: '#f1f5f9',
-                    colorTextSecondary: '#94a3b8',
-                    borderRadius: '0.75rem',
-                  },
-                  elements: {
-                    rootBox: 'w-full',
-                    card: 'border border-slate-800 shadow-2xl bg-slate-900/95 w-full rounded-2xl',
-                    formButtonPrimary: 'bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold',
-                    footerActionLink: 'text-emerald-400 hover:text-emerald-300 font-semibold',
-                  }
-                }}
+                appearance={clerkAuthAppearance}
               />
             )}
 
