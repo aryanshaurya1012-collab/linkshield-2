@@ -11,6 +11,8 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@clerk/react": "^6.19.4",
+    "@clerk/themes": "^2.4.57",
     "clsx": "^2.1.1",
     "framer-motion": "^12.40.0",
     "lucide-react": "^0.577.0",

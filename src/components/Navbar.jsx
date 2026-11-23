@@ -1,17 +1,10 @@
 import React from 'react';
-import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { Shield, Home, Search, Database, LayoutDashboard, History, LogOut } from 'lucide-react';
-import { api } from '../utils/api';
+import { NavLink, Link } from 'react-router-dom';
+import { Shield, Home, Search, Database, LayoutDashboard, History, KeyRound } from 'lucide-react';
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react';
+import { dark } from '@clerk/themes';
 
-export default function Navbar({ user, onLogout }) {
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    await api.logout();
-    onLogout();
-    navigate('/');
-  };
-
+export default function Navbar({ isClerkConfigured }) {
   const navItems = [
     { to: '/', label: 'Home', icon: Home },
     { to: '/scanner', label: 'Scanner', icon: Search },
@@ -34,7 +27,7 @@ export default function Navbar({ user, onLogout }) {
                 <span className="text-base font-bold tracking-tight text-white flex items-center gap-1.5">
                   LinkShield
                   <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold">
-                    v3.0
+                    Clerk v3
                   </span>
                 </span>
                 <p className="text-[10px] text-slate-400 font-medium -mt-0.5">Threat Intel &amp; Phishing Defense</p>
@@ -47,7 +40,7 @@ export default function Navbar({ user, onLogout }) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span className="text-xs font-mono text-slate-400 font-medium">Engine Online</span>
+              <span className="text-xs font-mono text-slate-400 font-medium">Clerk Auth Active</span>
             </div>
           </div>
 
@@ -75,44 +68,47 @@ export default function Navbar({ user, onLogout }) {
             })}
           </nav>
 
-          {/* Right Actions / User Profile */}
+          {/* Right Actions / Clerk User Profile */}
           <div className="flex items-center gap-3">
-            {user ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2.5 px-3 py-1.5 bg-slate-900/80 border border-slate-800 rounded-xl">
-                  {user.avatar ? (
-                    <img src={user.avatar} alt={user.name} className="w-5 h-5 rounded-full" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px] font-bold">
-                      {user.name?.[0]?.toUpperCase() || 'U'}
-                    </div>
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-xs font-bold text-slate-200 leading-tight truncate max-w-[130px]">
-                      {user.name}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-mono leading-tight truncate max-w-[130px]">
-                      {user.email}
-                    </span>
+            {isClerkConfigured ? (
+              <>
+                <Show when="signed-in">
+                  <div className="flex items-center gap-3">
+                    <UserButton
+                      appearance={{
+                        baseTheme: dark,
+                        elements: {
+                          avatarBox: 'w-8 h-8 rounded-full border border-emerald-500/30 shadow-md ring-2 ring-emerald-500/20',
+                          userButtonPopoverCard: 'bg-slate-900 border border-slate-800 text-slate-100 shadow-2xl',
+                        }
+                      }}
+                    />
                   </div>
-                </div>
+                </Show>
 
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition-colors border border-transparent hover:border-rose-500/20"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </button>
-              </div>
+                <Show when="signed-out">
+                  <div className="flex items-center gap-2">
+                    <SignInButton mode="modal">
+                      <button className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xs rounded-lg transition-all shadow-sm active:scale-95">
+                        Get Started
+                      </button>
+                    </SignUpButton>
+                  </div>
+                </Show>
+              </>
             ) : (
               <div className="flex items-center gap-2">
                 <Link
                   to="/auth"
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 rounded-lg transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 rounded-lg transition-colors"
                 >
-                  Sign In
+                  <KeyRound className="w-3.5 h-3.5" />
+                  Connect Clerk Key
                 </Link>
                 <Link
                   to="/scanner"
