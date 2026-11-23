@@ -1,43 +1,53 @@
-# LinkShield
+# LinkShield Enterprise Threat Intelligence & URL Forensic Platform
 
-LinkShield is a high-performance cyber threat intelligence dashboard and phishing-risk simulator. It analyzes URLs locally in the browser, calculates Shannon entropy, detects homographs and suspicious TLDs, identifies spoofing and evasion vectors, stores per-operator forensic scan history, and provides an immersive cyberpunk command center.
+LinkShield is an enterprise-grade cybersecurity platform that performs real-time forensic inspection of URLs, domain infrastructure, SSL/TLS certificates, and security headers to protect users against sophisticated phishing, credential harvesting, malware delivery, and domain generation algorithms (DGA).
 
-## Core Capabilities & Threat Engine
+## System Architecture & Capabilities
 
-- **Client-Side Auth Vault**: PBKDF2 password derivation (120,000 SHA-256 iterations) with per-user cryptographic salts and session persistence across reloads.
-- **Shannon Entropy Engine**: Measures information density and character randomness $H(X)$ to expose Domain Generation Algorithms (DGA).
-- **Homograph & Punycode Detection**: Flags internationalized domain name (IDN) homograph attacks and `xn--` spoofing prefixes.
-- **Authority & Credential Spoofing**: Identifies deceptive `@` embedded userinfo tricks that obscure genuine destination hostnames.
-- **Raw IP Vector Detection**: Flags direct IPv4 and IPv6 hostnames commonly deployed by phishing kits and Command & Control (C2) servers.
-- **Brand Target Impersonation**: Detects high-value target brand names (PayPal, Google, Microsoft, Apple, Banking) nested within untrusted subdomains or paths.
-- **URL Shortener Detection**: Flags shortened links (bit.ly, tinyurl, etc.) that mask malicious destinations.
-- **Multipart Suffix Resolution**: Parses global multi-part ccTLDs (`.ac.in`, `.co.uk`, `.gov.au`, etc.) to prevent false-positive brand flags on trusted institutions.
-- **Forensic Threat History**: Local encrypted storage of scans with search filtering, risk-tier sorting, record deletion, and robust RFC-compliant CSV forensics export.
+- **Real-Time Network Probes**: Live DNS resolution (A, AAAA, MX, NS, TXT), live TLS/SSL handshake analysis (issuer, expiry, cipher, protocol), and HTTP security header audits (HSTS, CSP, X-Frame-Options).
+- **Persistent SQLite Database**: Built with Node 24 native `node:sqlite` (`linkshield.db`), providing persistent relational storage for user accounts, historical audit trails, and global Indicators of Compromise (IOCs).
+- **Google & Apple Single Sign-On (SSO)**: One-click authentication with Google and Apple accounts, plus salted PBKDF2 SHA-256 email credentials.
+- **Deep Forensic Inspector**: Multi-tab live URL breakdown:
+  - **Threat Heuristics**: Shannon entropy calculation $H(X)$, IDN homograph / punycode detection, brand target impersonation heuristics, and risky TLD classification.
+  - **Live DNS & Host**: IPv4, IPv6, MX mail routing, authoritative nameservers, and SPF records.
+  - **SSL/TLS Certificates**: Live CA issuer verification, validity period, expiration warnings, and cipher strength.
+  - **Security Headers**: HSTS enforcement, Content Security Policy, and clickjacking protection.
+- **SOC Executive Dashboard**: High-level telemetry, clean vs threat ratio, Shannon entropy tracking, and quick-inspect launcher.
+- **Forensic Audit Archive**: Searchable historical scan log with detail inspection drawers, single-entry deletion, purge capability, and RFC-compliant CSV & JSON forensic export.
+- **Threat Intelligence Feed**: Dedicated IOC feed tracking trending phishing infrastructure, high-risk TLD abuse rates, and targeted enterprise brand watchlists.
+- **Modern Enterprise Aesthetics**: Professional dark slate interface inspired by industry-standard SOC tooling (Cloudflare, CrowdStrike, Linear), eliminating distracting neon/arcade effects.
 
 ## Tech Stack
 
-- **React 19**
-- **React Router 7**
-- **Vite 7**
-- **Tailwind CSS 3**
-- **Lucide React**
-- **Web Crypto API & Web Audio API**
+- **Frontend**: React 19, React Router 7, Vite 7, Tailwind CSS 3, Lucide React
+- **Backend / API**: Node.js 24 native SQLite (`node:sqlite`), DNS (`node:dns/promises`), TLS (`node:tls`), Vite Middleware API Plugin
+- **Cryptography**: PBKDF2 with SHA-256, Shannon Entropy Mathematics, Web Crypto
 
 ## Project Structure
 
 ```text
-src/
-  main.jsx                # Application bootstrap
-  App.jsx                 # Router, layout, telemetry ticker, auth gating
-  index.css               # Cyberpunk styling, glowing panels, custom scrollbars
-  components/
-    Auth.jsx              # Operator authentication sequence (login/register)
-    Scanner.jsx           # Cyber vector input, live telemetry logs, risk gauge, alert modal
-    History.jsx           # Threat intel archive, search filter, forensic CSV export
-  utils/
-    engine.js             # Risk scoring heuristics, entropy calculations, domain parsing
-    engine.test.js        # Node test suite for detection heuristics
-    db.js                 # Client-side salted vault & forensic scan storage
+linkshield/
+├── server/
+│   ├── db.js                 # Native SQLite database schema & IOC seeding
+│   ├── inspector.js          # Real-time DNS, TLS handshake, & HTTP probe engine
+│   └── apiPlugin.js          # Vite fullstack API middleware router (/api/*)
+├── src/
+│   ├── components/
+│   │   └── Navbar.jsx        # Enterprise top navigation & status indicator
+│   ├── pages/
+│   │   ├── Dashboard.jsx     # Executive SOC telemetry & threat breakdown
+│   │   ├── Scanner.jsx       # Flagship live forensic URL inspector
+│   │   ├── History.jsx       # SQLite forensic audit archive & CSV export
+│   │   ├── ThreatIntel.jsx   # Live Indicators of Compromise (IOC) database
+│   │   └── Auth.jsx          # Google, Apple, and enterprise email authentication
+│   ├── utils/
+│   │   ├── api.js            # Client-side API client for SQLite endpoints
+│   │   ├── engine.js         # Shannon entropy, homographs, & heuristic rules
+│   │   └── engine.test.js    # Automated unit tests for heuristic algorithms
+│   ├── App.jsx               # Client router, global state, & route guard
+│   └── index.css             # Enterprise dark theme & Tailwind layers
+├── linkshield.db             # Local persistent SQLite database
+└── vite.config.js            # Vite configuration with embedded API plugin
 ```
 
 ## Getting Started
@@ -47,12 +57,11 @@ npm install
 npm run dev
 ```
 
-App runs by default on `http://localhost:5173`.
+The application runs locally on `http://localhost:5173` with both the frontend and fullstack SQLite API server active in a single process.
 
-## Scripts
+## Available Scripts
 
-- `npm run dev` - Start Vite development server
-- `npm run build` - Production build (output in `/dist`)
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint checks
-- `npm test` - Run automated test suite (`node --test`)
+- `npm run dev` - Launch development server with full real-time API and SQLite database
+- `npm run build` - Compile production distribution
+- `npm run lint` - Run ESLint verification
+- `npm test` - Execute automated Node test suite (`node --test`)
